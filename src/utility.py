@@ -16,6 +16,8 @@ import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lrs
 
+import horovod.torch as hvd
+
 class timer():
     def __init__(self):
         self.acc = 0
@@ -180,7 +182,7 @@ def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
 
     return -10 * math.log10(mse)
 
-def make_optimizer(args, target):
+def make_optimizer(args, target, hvd):
     '''
         make optimizer and scheduler together
     '''
@@ -232,6 +234,20 @@ def make_optimizer(args, target):
             return self.scheduler.last_epoch
     
     optimizer = CustomOptimizer(trainable, **kwargs_optimizer)
+
+    # wrapping with horovod distributed optimizer
+    # optimizer: already made one with CustomOptimizer
+    # named_parameters: current target parameters
+    # compression: default
+    # backward_passes_per_step: default
+    # op: default
+    # gradient_predivide_factor: default
+    # for more API information: 
+    # https://horovod.readthedocs.io/en/stable/api.html
+    optimizer = hvd.DistributedOptimizer(
+        optimizer,
+        named_parameters = target.named_parameters()
+    )
     optimizer._register_scheduler(scheduler_class, **kwargs_scheduler)
     return optimizer
 

@@ -8,8 +8,10 @@ import torch
 import torch.nn.utils as utils
 from tqdm import tqdm
 
+import horovod.torch as hvd
+
 class Trainer():
-    def __init__(self, args, loader, my_model, my_loss, ckp):
+    def __init__(self, args, loader, my_model, my_loss, ckp, hvd):
         self.args = args
         self.scale = args.scale
 
@@ -18,7 +20,9 @@ class Trainer():
         self.loader_test = loader.loader_test
         self.model = my_model
         self.loss = my_loss
-        self.optimizer = utility.make_optimizer(args, self.model)
+
+        # wrapped optimizer with horovod distributed support
+        self.optimizer = utility.make_optimizer(args, self.model, hvd)
 
         if self.args.load != '':
             self.optimizer.load(ckp.dir, epoch=len(ckp.log))

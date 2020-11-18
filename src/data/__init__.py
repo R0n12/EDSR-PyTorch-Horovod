@@ -3,6 +3,11 @@ from importlib import import_module
 from torch.utils.data import dataloader
 from torch.utils.data import ConcatDataset
 
+# import distributed library of PyTorch
+import torch.utils.data.distributed as torchDis
+
+import horovod.torch as hvd
+
 # This is a simple wrapper function for ConcatDataset
 class MyConcatDataset(ConcatDataset):
     def __init__(self, datasets):
@@ -14,7 +19,7 @@ class MyConcatDataset(ConcatDataset):
             if hasattr(d, 'set_scale'): d.set_scale(idx_scale)
 
 class Data:
-    def __init__(self, args):
+    def __init__(self, args, hvd):
         self.loader_train = None
         if not args.test_only:
             datasets = []
@@ -23,12 +28,38 @@ class Data:
                 m = import_module('data.' + module_name.lower())
                 datasets.append(getattr(m, module_name)(args, name=d))
 
-            self.loader_train = dataloader.DataLoader(
+            # add distributed training dataset sampler according to 
+            # https://github.com/horovod/horovod/blob/master/examples/pytorch/pytorch_imagenet_resnet50.py
+            self.train_sampler = torchDis.DistributedSampler(
+                # taking concatenated datasets
                 MyConcatDataset(datasets),
+
+                # number of processes participarting in distributed training
+                num_replicas = hvd.size(),
+
+                # Rank of the current process within num_replicas
+                rank = hvd.rank()
+            )
+
+            self.loader_train = dataloader.DataLoader(
+
+                # taking concatenated datasets
+                MyConcatDataset(datasets),
+
+                # how many samples per batch to load
                 batch_size=args.batch_size,
+
+                # data reshuffled at every epoch
                 shuffle=True,
+
+                
                 pin_memory=not args.cpu,
+
+                # threads used in GPU for data loading
                 num_workers=args.n_threads,
+
+                # added the new distributed sampler
+                sampler = self.train_sampler
             )
 
         self.loader_test = []
