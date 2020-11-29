@@ -39,7 +39,9 @@ class Trainer():
         )
         self.loss.start_log()
         self.model.train()
-
+        
+        # timer_data: Timing data loading for each batch_size * print_every
+        # timer_model: Timing data passing time through the model for each batch_size * print_every
         timer_data, timer_model = utility.timer(), utility.timer()
         # TEMP
         self.loader_train.dataset.set_scale(0)
