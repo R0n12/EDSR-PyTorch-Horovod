@@ -14,11 +14,14 @@ torch.manual_seed(args.seed)
 checkpoint = utility.checkpoint(args)
 
 def main():
+    
+    # initialize horovod.torch
     hvd.init()
 
     # cuda device flag
     args.cuda = args.n_GPUs > 1 and torch.cuda.is_available()
-
+    
+    # pinging local GPU to process
     if args.cuda:
         torch.cuda.set_device(hvd.local_rank())
         torch.cuda.manual_seed(args.seed)
@@ -40,6 +43,8 @@ def main():
             # wrapping optimizer with horovod distributed support
             # param added: hvd
             t = Trainer(args, loader, _model, _loss, checkpoint, hvd)
+            
+            # Broadcast the initial variable states from rank 0 to all other processes
             while not t.terminate():
                 hvd.broadcast_parameters(_model.state_dict(), root_rank = 0)
                 hvd.broadcast_optimizer_state(t.optimizer, root_rank = 0)
