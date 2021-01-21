@@ -132,7 +132,7 @@ class Model(nn.Module):
                         y_chop.extend(_y.chunk(n_GPUs, dim=0))
         else:
             for p in zip(*x_chops):
-		p1 = [p[0].unsqueeze(0)]
+                p1 = [p[0].unsqueeze(0)]	
                 y = self.forward_chop(*p1, shave=shave, min_size=min_size)
                 if not isinstance(y, list): y = [y]
                 if not y_chops:
