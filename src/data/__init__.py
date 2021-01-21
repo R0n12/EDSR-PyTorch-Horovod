@@ -49,8 +49,8 @@ class Data:
                 # how many samples per batch to load
                 batch_size=args.batch_size,
 
-                # data reshuffled at every epoch
-                shuffle=True,
+                # data shuffling disabled when using sampler
+                shuffle=False,
 
                 
                 pin_memory=not args.cpu,
