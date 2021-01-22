@@ -19,11 +19,14 @@ def main():
     hvd.init()
 
     # cuda device flag
-    args.cuda = args.n_GPUs > 1 and torch.cuda.is_available()
-    
+    args.cuda = args.hvd and torch.cuda.is_available()
+    print("args.cuda: "+str(args.cuda))
+    print("args.hvd: "+str(args.hvd))
+    print("cuda available: "+str(torch.cuda.is_available()))    
     # pinging local GPU to process
     if args.cuda:
         torch.cuda.set_device(hvd.local_rank())
+        print("hvd local rank:" + str(hvd.local_rank()))
         torch.cuda.manual_seed(args.seed)
 
     global model
@@ -43,11 +46,10 @@ def main():
             # wrapping optimizer with horovod distributed support
             # param added: hvd
             t = Trainer(args, loader, _model, _loss, checkpoint, hvd)
-            
+            hvd.broadcast_parameters(_model.state_dict(), root_rank = 0)
+            hvd.broadcast_optimizer_state(t.optimizer, root_rank = 0)
             # Broadcast the initial variable states from rank 0 to all other processes
             while not t.terminate():
-                hvd.broadcast_parameters(_model.state_dict(), root_rank = 0)
-                hvd.broadcast_optimizer_state(t.optimizer, root_rank = 0)
                 t.train()
                 t.test()
 

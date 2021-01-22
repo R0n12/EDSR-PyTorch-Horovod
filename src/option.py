@@ -17,7 +17,7 @@ parser.add_argument('--n_GPUs', type=int, default=1,
                     help='number of GPUs')
 parser.add_argument('--seed', type=int, default=1,
                     help='random seed')
-
+parser.add_argument('--hvd',action='store_true',help='enable Horovod distributed training')
 # Data specifications
 parser.add_argument('--dir_data', type=str, default='../../../dataset',
                     help='dataset directory')
