@@ -182,7 +182,7 @@ def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
 
     return -10 * math.log10(mse)
 
-def make_optimizer(args, target, hvd):
+def make_optimizer(args, target):
     '''
         make optimizer and scheduler together
     '''
@@ -250,4 +250,3 @@ def make_optimizer(args, target, hvd):
     )
     optimizer._register_scheduler(scheduler_class, **kwargs_scheduler)
     return optimizer
-

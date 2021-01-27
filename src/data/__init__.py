@@ -19,7 +19,7 @@ class MyConcatDataset(ConcatDataset):
             if hasattr(d, 'set_scale'): d.set_scale(idx_scale)
 
 class Data:
-    def __init__(self, args, hvd):
+    def __init__(self, args):
         self.loader_train = None
         if not args.test_only:
             datasets = []

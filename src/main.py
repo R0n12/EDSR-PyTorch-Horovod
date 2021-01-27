@@ -39,13 +39,13 @@ def main():
         if checkpoint.ok:
             # added support for distributed training dataset loading
             # param added: hvd
-            loader = data.Data(args,hvd)
+            loader = data.Data(args)
             _model = model.Model(args, checkpoint)
             _loss = loss.Loss(args, checkpoint) if not args.test_only else None
 
             # wrapping optimizer with horovod distributed support
             # param added: hvd
-            t = Trainer(args, loader, _model, _loss, checkpoint, hvd)
+            t = Trainer(args, loader, _model, _loss, checkpoint)
             hvd.broadcast_parameters(_model.state_dict(), root_rank = 0)
             hvd.broadcast_optimizer_state(t.optimizer, root_rank = 0)
             # Broadcast the initial variable states from rank 0 to all other processes

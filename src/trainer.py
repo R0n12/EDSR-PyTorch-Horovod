@@ -11,7 +11,7 @@ from tqdm import tqdm
 import horovod.torch as hvd
 
 class Trainer():
-    def __init__(self, args, loader, my_model, my_loss, ckp, hvd):
+    def __init__(self, args, loader, my_model, my_loss, ckp):
         self.args = args
         self.scale = args.scale
 
@@ -22,7 +22,7 @@ class Trainer():
         self.loss = my_loss
 
         # wrapped optimizer with horovod distributed support
-        self.optimizer = utility.make_optimizer(args, self.model, hvd)
+        self.optimizer = utility.make_optimizer(args, self.model)
 
         if self.args.load != '':
             self.optimizer.load(ckp.dir, epoch=len(ckp.log))
