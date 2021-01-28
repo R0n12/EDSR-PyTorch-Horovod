@@ -15,7 +15,7 @@ checkpoint = utility.checkpoint(args)
 
 def main():
     
-    timer_PreTrain = utility.timer()
+    timer_HvdInit = utility.timer()
     # initialize horovod.torch
     hvd.init()
 
@@ -29,7 +29,7 @@ def main():
         torch.cuda.set_device(hvd.local_rank())
         print("hvd local rank:" + str(hvd.local_rank()))
         torch.cuda.manual_seed(args.seed)
-
+    print("Horovod init time elapsed: "+str(timer_HvdInit.toc()))
     cudnn.benchmark = True
 
     global model
@@ -49,9 +49,12 @@ def main():
             # wrapping optimizer with horovod distributed support
             # param added: hvd
             t = Trainer(args, loader, _model, _loss, checkpoint)
+            timer_HvdBcast1 = utility.timer()
             hvd.broadcast_parameters(_model.state_dict(), root_rank = 0)
+            print("Hvd Bcast params time elapsed: "+str(timer_HvdBcast1.toc()))
+            timer_HvdBcast2 = utility.timer()
             hvd.broadcast_optimizer_state(t.optimizer, root_rank = 0)
-            print("Pre train time elapsed: "+str(timer_PreTrain.toc()))
+            print("Hvd Bcast optimizer state time elapsed: "+str(timer_HvdBcast2.toc()))
             # Broadcast the initial variable states from rank 0 to all other processes
             while not t.terminate():
                 timer_TrainLoop = utility.timer()
