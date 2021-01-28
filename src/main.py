@@ -15,6 +15,7 @@ checkpoint = utility.checkpoint(args)
 
 def main():
     
+    timer_PreTrain = utility.timer()
     # initialize horovod.torch
     hvd.init()
 
@@ -50,9 +51,12 @@ def main():
             t = Trainer(args, loader, _model, _loss, checkpoint)
             hvd.broadcast_parameters(_model.state_dict(), root_rank = 0)
             hvd.broadcast_optimizer_state(t.optimizer, root_rank = 0)
+            print("Pre train time elapsed: "+str(timer_PreTrain.toc()))
             # Broadcast the initial variable states from rank 0 to all other processes
             while not t.terminate():
+                timer_TrainLoop = utility.timer()
                 t.train()
+                print("Single loop time elapsed: "+str(timer_TrainLoop.toc()))
 
             checkpoint.done()
 
