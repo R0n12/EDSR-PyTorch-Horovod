@@ -51,7 +51,6 @@ def main():
             # Broadcast the initial variable states from rank 0 to all other processes
             while not t.terminate():
                 t.train()
-                t.test()
 
             checkpoint.done()
 
