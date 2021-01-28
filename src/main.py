@@ -1,5 +1,5 @@
 import torch
-
+import torch.backends.cudnn as cudnn
 import utility
 import data
 import model
@@ -28,6 +28,8 @@ def main():
         torch.cuda.set_device(hvd.local_rank())
         print("hvd local rank:" + str(hvd.local_rank()))
         torch.cuda.manual_seed(args.seed)
+
+    cudnn.benchmark = True
 
     global model
     if args.data_test == ['video']:
